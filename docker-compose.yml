@@ -1,0 +1,53 @@
+version: '3'
+
+volumes:
+    db:
+
+networks:
+    backend:
+
+services:
+    db:
+        image: mariadb
+        volumes:
+            - db:/var/lib/mysql
+        networks:
+            backend:
+        environment:
+            - MARIADB_DATABASE=db
+            - MARIADB_USER=user
+            - MARIADB_PASSWORD=pass
+
+            - MARIADB_RANDOM_ROOT_PASSWORD=yes
+    php:
+        build: .
+        container_name: nftblocker
+        networks:
+            backend:
+        depends_on:
+            - db
+        volumes:
+            - .:/app
+            - /app/src/credentialstemplate/
+        environment:
+            - DB_SERVER_NAME=db
+            - DB_SERVER_PORT=3306
+            - DB_DATABASE_NAME=db
+            - DB_USER_NAME=user
+            - DB_USER_PASSWORD=pass
+            - API_CONSUMER_KEY=test
+            - API_CONSUMER_SECRET=test
+            - ADMIN_ACCESS_TOKEN=test
+            - ADMIN_ACCESS_TOKEN_SECRET=test
+            - ADMIN_USER_ID=test
+    
+    web:
+        networks:
+            backend:
+        image: nginx:latest
+        ports:
+            - "8000:80"
+        volumes:
+            - ./nginx.conf:/etc/nginx/conf.d/nginx.conf
+        depends_on:
+            - php
